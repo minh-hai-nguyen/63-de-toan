@@ -26,6 +26,7 @@ export default async function ReviewPage() {
     stem: b.question.stem,
     choices: parseChoices(b.question.choices),
     correctKey: b.question.correctKey,
+    hint: b.question.hint,
     solution: b.question.solution,
     topic: b.question.topic,
     difficulty: b.question.difficulty,

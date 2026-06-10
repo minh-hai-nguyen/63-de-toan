@@ -42,6 +42,7 @@ function toQuestionDTO(q: {
   stem: string;
   choices: string | null;
   correctKey: string | null;
+  hint: string | null;
   solution: string | null;
   topic: string;
   difficulty: string;
@@ -54,11 +55,17 @@ function toQuestionDTO(q: {
     stem: q.stem,
     choices: parseChoices(q.choices),
     correctKey: q.correctKey,
+    hint: q.hint,
     solution: q.solution,
     topic: q.topic,
     difficulty: q.difficulty,
     points: q.points,
   };
+}
+
+/** Bỏ đáp án/lời giải/gợi ý — dùng khi gửi đề xuống lúc HS đang làm bài. */
+function stripAnswers(q: QuestionDTO): QuestionDTO {
+  return { ...q, correctKey: null, hint: null, solution: null };
 }
 
 /** Lấy 1 đề kèm câu hỏi (sắp theo thứ tự). null nếu không tồn tại. */
@@ -82,4 +89,16 @@ export async function getExamByNumber(
     essayCount: questions.length - mcCount,
     questions,
   };
+}
+
+/**
+ * Đề dùng cho màn LÀM BÀI: đã loại bỏ đáp án/gợi ý/lời giải để không lộ
+ * cho học sinh trước khi nộp. Việc chấm vẫn dựa trên dữ liệu gốc ở server.
+ */
+export async function getExamForAttempt(
+  number: number
+): Promise<ExamWithQuestionsDTO | null> {
+  const exam = await getExamByNumber(number);
+  if (!exam) return null;
+  return { ...exam, questions: exam.questions.map(stripAnswers) };
 }

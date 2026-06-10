@@ -11,7 +11,8 @@ export type SeedQuestion = {
   stem: string;
   choices?: Choice[]; // chỉ MC
   correctKey?: "A" | "B" | "C" | "D"; // chỉ MC
-  solution?: string; // lời giải
+  hint?: string; // hướng dẫn giải ngắn (gợi ý phương pháp)
+  solution?: string; // lời giải chi tiết
   topic: string; // mã thể loại, xem src/lib/taxonomy.ts
   difficulty: "NHAN_BIET" | "THONG_HIEU" | "VAN_DUNG" | "VAN_DUNG_CAO";
   points?: number;

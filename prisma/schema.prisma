@@ -43,7 +43,8 @@ model Question {
   stem       String // đề bài (LaTeX/markdown nhẹ)
   choices    String? // JSON text: [{"key":"A","text":"..."}] – chỉ MC
   correctKey String? // "A".."D" – chỉ MC
-  solution   String? // lời giải (LaTeX)
+  hint       String? // hướng dẫn giải ngắn gọn (gợi ý phương pháp)
+  solution   String? // lời giải chi tiết (LaTeX)
   topic      String // mã thể loại, xem src/lib/taxonomy.ts
   difficulty String // "NHAN_BIET" | "THONG_HIEU" | "VAN_DUNG" | "VAN_DUNG_CAO"
   points     Float      @default(0.25)

@@ -48,8 +48,10 @@ export const deTemplate: ExamSeed = {
       points: 1.5,
       topic: "PHUONG_TRINH_HE_PT",
       difficulty: "VAN_DUNG",
-      stem: R`Nội dung câu tự luận 9...`,
-      solution: R`Lời giải câu 9...`,
+      hint: R`Hướng dẫn giải ngắn (gợi ý phương pháp)... (HS chỉ xem được sau khi nộp bài)`,
+      stem: R`Nội dung câu tự luận 9...
+Chèn hình (nếu có): <img class="qfig" src="/exam-figures/ten-hinh.png" alt="..." />`,
+      solution: R`Lời giải chi tiết câu 9...`,
     },
     // ... thêm câu 10..15 (ESSAY) ...
   ],

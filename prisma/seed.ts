@@ -39,6 +39,7 @@ async function main() {
           stem: q.stem,
           choices: q.choices ? JSON.stringify(q.choices) : null,
           correctKey: q.correctKey ?? null,
+          hint: q.hint ?? null,
           solution: q.solution ?? null,
           topic: q.topic,
           difficulty: q.difficulty,

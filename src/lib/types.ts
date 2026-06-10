@@ -9,6 +9,7 @@ export type QuestionDTO = {
   stem: string;
   choices: ChoiceDTO[]; // rỗng nếu là tự luận
   correctKey: string | null;
+  hint: string | null; // hướng dẫn giải ngắn (chỉ hiện sau khi nộp)
   solution: string | null;
   topic: string;
   difficulty: string;

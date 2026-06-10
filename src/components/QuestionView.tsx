@@ -24,6 +24,7 @@ export default function QuestionView({
   bookmarked?: boolean;
   onToggleBookmark?: () => void;
 }) {
+  const [showHint, setShowHint] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const isMC = question.part === "MC";
 
@@ -115,23 +116,44 @@ export default function QuestionView({
 
       {!isMC && mode === "attempt" && (
         <p className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-          ✍️ Em trình bày lời giải ra giấy. Sau khi nộp bài có thể xem lời giải
-          chi tiết để đối chiếu.
+          ✍️ Em trình bày lời giải ra giấy. Sau khi nộp bài có thể xem hướng dẫn
+          và lời giải chi tiết để đối chiếu.
         </p>
       )}
 
-      {!isMC && mode === "review" && question.solution && (
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => setShowSolution((s) => !s)}
-            className="rounded-xl bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100"
-          >
-            {showSolution ? "Ẩn lời giải" : "Xem lời giải"}
-          </button>
-          {showSolution && (
-            <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
-              <MathContent html={question.solution} solution />
+      {/* Hướng dẫn + lời giải: chỉ hiện sau khi nộp bài (chế độ xem lại) */}
+      {mode === "review" && (question.hint || question.solution) && (
+        <div className="mt-4 flex flex-col gap-3">
+          {question.hint && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowHint((s) => !s)}
+                className="rounded-xl bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100"
+              >
+                {showHint ? "Ẩn hướng dẫn" : "💡 Hướng dẫn giải"}
+              </button>
+              {showHint && (
+                <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/50 p-4">
+                  <MathContent html={question.hint} solution />
+                </div>
+              )}
+            </div>
+          )}
+          {question.solution && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowSolution((s) => !s)}
+                className="rounded-xl bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100"
+              >
+                {showSolution ? "Ẩn lời giải" : "📖 Lời giải chi tiết"}
+              </button>
+              {showSolution && (
+                <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
+                  <MathContent html={question.solution} solution />
+                </div>
+              )}
             </div>
           )}
         </div>
