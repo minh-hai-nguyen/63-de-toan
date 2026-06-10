@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+  --color-background: #f6f8fc;
+  --color-foreground: #1f2937;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #f6f8fc;
+  --foreground: #1f2937;
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 500px at 100% -10%, #eef2ff 0%, transparent 60%),
+    radial-gradient(1000px 500px at -10% 10%, #ecfeff 0%, transparent 55%),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
+  font-family: var(--font-sans);
+}
+
+/* Nội dung câu hỏi / lời giải (HTML + công thức MathJax) */
+.qcontent {
+  line-height: 1.7;
+  word-break: break-word;
+}
+.qcontent p {
+  margin: 0.35rem 0;
+}
+.qcontent strong {
+  font-weight: 700;
+}
+
+/* Giữ xuống dòng trong lời giải đã soạn sẵn */
+.qsolution {
+  white-space: pre-line;
+  line-height: 1.8;
+}
+
+/* Bảng trong đề (thống kê...) */
+.qtable {
+  border-collapse: collapse;
+  margin: 0.6rem 0;
+  font-size: 0.95em;
+}
+.qtable th,
+.qtable td {
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  text-align: center;
+}
+.qtable th {
+  background: #eef2ff;
+  font-weight: 600;
+}
+
+/* MathJax: không tràn ngang trên màn nhỏ */
+mjx-container {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+* {
+  scrollbar-width: thin;
 }

@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Luyện thi Toán — 63 đề tuyển sinh lớp 10
 
-## Getting Started
+Web động giúp học sinh **ôn luyện 63 đề thi Toán**, có tài khoản, chấm điểm trắc
+nghiệm tự động, lời giải tự luận, theo dõi tiến bộ và **phát hiện thể loại còn yếu**.
 
-First, run the development server:
+## Tính năng
+
+- 🔐 **Tài khoản 2 vai trò**: Học sinh (tự đăng ký) & Giáo viên.
+- 📝 **Làm bài**: trắc nghiệm chấm điểm tự động; tự luận có nút ẩn/hiện lời giải (công thức render bằng MathJax).
+- ⏱️ **Đồng hồ đếm ngược**, tự nộp khi hết giờ.
+- 🧭 **Bảng điều hướng câu hỏi**: thấy ngay câu đã/chưa trả lời.
+- 🔖 **Đánh dấu câu để xem lại** — tổng hợp ở trang “Xem lại”.
+- 🏷️ Mỗi câu gắn **thể loại** + **độ khó**.
+- 📊 **Thống kê theo thể loại**: học sinh biết mình yếu phần nào; giáo viên xem cả lớp & từng học sinh.
+
+## Công nghệ
+
+Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Prisma 6 · Auth.js v5 ·
+MathJax (better-react-mathjax). Dev dùng **SQLite**, deploy khuyến nghị **PostgreSQL (Neon) + Vercel**.
+
+## Chạy thử ở máy (local)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env          # tạo file .env (Windows: copy .env.example .env)
+npx prisma migrate deploy     # tạo bảng cho SQLite
+npm run db:seed               # nạp Đề 01, 02 + tài khoản mẫu
+npm run dev                   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Tài khoản mẫu** (mật khẩu `12345678`): `gv` (giáo viên), `hocsinh` (học sinh).
+Học sinh mới có thể tự đăng ký tại `/register`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Cấu trúc thư mục
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+data/exams/        Nội dung đề (de-01.ts, de-02.ts, de-template.ts, index.ts)
+prisma/            schema.prisma, seed.ts, migrations
+src/
+  app/             Trang & route (App Router)
+  components/      UI dùng chung, QuestionView, AttemptClient, ...
+  lib/             config, taxonomy, scoring, types (thuần, không I/O)
+  server/
+    services/      Lớp truy cập dữ liệu (exam, attempt, analytics, user, bookmark)
+    actions.ts     Server Actions (đăng nhập, đăng ký, nộp bài, bookmark)
+  auth.ts          Cấu hình Auth.js
+```
 
-## Learn More
+> Kiến trúc phân lớp: trang gọi **service**, không truy vấn Prisma trực tiếp;
+> hằng số gom ở `src/lib/config.ts`; UI cơ bản gom ở `src/components/ui.tsx`.
+> Sửa về sau chỉ chạm 1–2 file.
 
-To learn more about Next.js, take a look at the following resources:
+## Thêm đề mới (đến 63 đề)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Copy `data/exams/de-template.ts` → `de-03.ts`, điền nội dung (xem hướng dẫn trong file).
+2. Mở `data/exams/index.ts`, import và thêm vào mảng `filled`.
+3. Chạy lại `npm run db:seed`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Quy ước toán: inline `$...$`, khối `$$...$$`; dùng `String.raw` để khỏi nhân đôi `\`.
+Mã thể loại & độ khó xem `src/lib/taxonomy.ts`.
 
-## Deploy on Vercel
+## Triển khai online (Vercel + Neon)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Tạo database PostgreSQL miễn phí ở [Neon](https://neon.tech), lấy connection string.
+2. Trong `prisma/schema.prisma`, đổi `provider = "sqlite"` → `"postgresql"`.
+3. Push code lên GitHub, import vào [Vercel](https://vercel.com).
+4. Đặt biến môi trường trên Vercel: `DATABASE_URL` (Neon), `AUTH_SECRET`, `AUTH_URL` (domain).
+5. Chạy migrate + seed lên DB prod:
+   ```bash
+   npx prisma migrate deploy
+   npm run db:seed
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Ghi chú
+
+- Hiện đã nhập đầy đủ **Đề 01 & 02**; các đề còn lại hiển thị “Đang cập nhật” cho tới khi thêm nội dung.
+- Phần tự luận không chấm tự động (đối chiếu lời giải); thống kê thể loại dựa trên phần trắc nghiệm.

@@ -1,0 +1,93 @@
+// Prisma schema – Web luyện thi 63 đề Toán
+// Ghi chú: dùng String thay cho enum và JSON-as-text để schema chạy được cả
+// SQLite (dev) lẫn PostgreSQL (prod). Khi deploy đổi provider = "postgresql".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  passwordHash String
+  displayName  String
+  role         String     @default("STUDENT") // "STUDENT" | "TEACHER"
+  className    String?
+  createdAt    DateTime   @default(now())
+  attempts     Attempt[]
+  bookmarks    Bookmark[]
+}
+
+model Exam {
+  id          String     @id @default(cuid())
+  number      Int        @unique // 1..63 – dùng làm định danh trên URL
+  title       String
+  durationMin Int        @default(120)
+  isPublished Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  questions   Question[]
+  attempts    Attempt[]
+}
+
+model Question {
+  id         String     @id @default(cuid())
+  exam       Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
+  examId     String
+  part       String // "MC" (trắc nghiệm) | "ESSAY" (tự luận)
+  order      Int // thứ tự câu trong đề (1..15)
+  stem       String // đề bài (LaTeX/markdown nhẹ)
+  choices    String? // JSON text: [{"key":"A","text":"..."}] – chỉ MC
+  correctKey String? // "A".."D" – chỉ MC
+  solution   String? // lời giải (LaTeX)
+  topic      String // mã thể loại, xem src/lib/taxonomy.ts
+  difficulty String // "NHAN_BIET" | "THONG_HIEU" | "VAN_DUNG" | "VAN_DUNG_CAO"
+  points     Float      @default(0.25)
+  answers    Answer[]
+  bookmarks  Bookmark[]
+
+  @@unique([examId, order])
+}
+
+model Attempt {
+  id          String    @id @default(cuid())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  exam        Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  examId      String
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  durationSec Int       @default(0)
+  mcScore     Float     @default(0)
+  mcMax       Float     @default(2)
+  status      String    @default("IN_PROGRESS") // "IN_PROGRESS" | "SUBMITTED"
+  answers     Answer[]
+}
+
+model Answer {
+  id          String   @id @default(cuid())
+  attempt     Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attemptId   String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId  String
+  selectedKey String? // đáp án HS chọn (MC)
+  isCorrect   Boolean?
+
+  @@unique([attemptId, questionId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, questionId])
+}
