@@ -43,6 +43,10 @@ body {
   border-radius: 0.5rem;
   background: #fff;
 }
+/* Giới hạn bề rộng hình minh hoạ cho cân đối */
+.qfig {
+  max-width: min(100%, 440px);
+}
 
 /* Giữ xuống dòng trong lời giải đã soạn sẵn */
 .qsolution {

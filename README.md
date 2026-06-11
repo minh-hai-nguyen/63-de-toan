@@ -59,6 +59,25 @@ src/
 Quy ước toán: inline `$...$`, khối `$$...$$`; dùng `String.raw` để khỏi nhân đôi `\`.
 Mã thể loại & độ khó xem `src/lib/taxonomy.ts`.
 
+## Test nhanh trên Render (SQLite)
+
+Repo đã có sẵn `render.yaml` (Blueprint):
+
+1. Đăng nhập [Render](https://render.com) → **New +** → **Blueprint** → chọn repo `63-de-toan`.
+2. Render tự đọc `render.yaml`: build, tạo bảng và seed dữ liệu, rồi chạy.
+3. Mở URL Render cấp (vd `https://luyen-thi-toan.onrender.com`). Đăng nhập thử `gv` / `hocsinh` (mật khẩu `12345678`) hoặc tự đăng ký.
+
+> Bản **free** của Render không có ổ đĩa lưu lâu dài: tài khoản/bài làm do người dùng tạo
+> có thể bị đặt lại về trạng thái seed khi service khởi động lại (sau thời gian “ngủ”).
+> Phù hợp để **test**. Muốn lưu bền, dùng PostgreSQL bên dưới.
+
+### Render + PostgreSQL (lưu bền)
+
+1. Trên Render tạo **PostgreSQL** (New + → PostgreSQL), copy **Internal Database URL**.
+2. Đổi `prisma/schema.prisma`: `provider = "postgresql"`.
+3. Trong service web, đặt `DATABASE_URL` = URL Postgres vừa tạo (xoá dòng SQLite trong `render.yaml` hoặc ghi đè ở tab Environment).
+4. Deploy lại — `prisma migrate deploy` + seed sẽ chạy trên Postgres.
+
 ## Triển khai online (Vercel + Neon)
 
 1. Tạo database PostgreSQL miễn phí ở [Neon](https://neon.tech), lấy connection string.

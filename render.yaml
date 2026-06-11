@@ -1,0 +1,24 @@
+# Render Blueprint — deploy nhanh để test (dùng SQLite).
+# Trên Render: New + > Blueprint > chọn repo này. Render đọc file này tự cấu hình.
+#
+# Lưu ý: bản free KHÔNG có ổ đĩa lưu lâu dài, nên dữ liệu do người dùng tạo
+# (tài khoản, bài làm) có thể bị đặt lại về trạng thái seed khi service khởi động lại.
+# Tài khoản mẫu gv / hocsinh (mật khẩu 12345678) và 2 đề luôn có sẵn.
+# Muốn lưu bền: xem hướng dẫn dùng PostgreSQL trong README.
+
+services:
+  - type: web
+    name: luyen-thi-toan
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build && npx prisma migrate deploy && npm run db:seed
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: "22.11.0"
+      - key: DATABASE_URL
+        value: "file:./prisma/dev.db"
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: AUTH_TRUST_HOST
+        value: "true"
