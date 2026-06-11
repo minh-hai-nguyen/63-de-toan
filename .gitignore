@@ -47,5 +47,5 @@ next-env.d.ts
 *.db
 *.db-journal
 prisma/*.db
-dev.log
+*.log
 .figwork/
