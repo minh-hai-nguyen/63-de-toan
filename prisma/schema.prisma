@@ -76,6 +76,7 @@ model Answer {
   question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId  String
   selectedKey String? // đáp án HS chọn (MC)
+  essayText   String? // bài làm tự luận HS nhập (ESSAY)
   isCorrect   Boolean?
 
   @@unique([attemptId, questionId])

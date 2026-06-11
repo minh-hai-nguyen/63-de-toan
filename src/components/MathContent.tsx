@@ -1,13 +1,18 @@
 "use client";
 
+import { memo } from "react";
 import { MathJax } from "better-react-mathjax";
 import { cn } from "@/lib/cn";
 
 /**
  * Hiển thị nội dung có HTML + công thức toán ($...$, $$...$$).
  * Dùng cho đề bài, đáp án và lời giải.
+ *
+ * Không dùng prop `dynamic`: nội dung là tĩnh nên chỉ typeset một lần khi mount.
+ * (Dùng `dynamic` sẽ khiến MathJax typeset lại mỗi lần re-render — rất nặng khi
+ * có đồng hồ đếm giây trên màn làm bài.)
  */
-export default function MathContent({
+function MathContent({
   html,
   className,
   solution = false,
@@ -18,7 +23,7 @@ export default function MathContent({
   solution?: boolean;
 }) {
   return (
-    <MathJax dynamic>
+    <MathJax>
       <div
         className={cn("qcontent", solution && "qsolution", className)}
         dangerouslySetInnerHTML={{ __html: html }}
@@ -26,3 +31,5 @@ export default function MathContent({
     </MathJax>
   );
 }
+
+export default memo(MathContent);

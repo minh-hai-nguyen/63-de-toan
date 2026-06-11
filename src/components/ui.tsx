@@ -21,14 +21,19 @@ export function Container({
 export function Card({
   children,
   className,
+  hover = false,
 }: {
   children: ReactNode;
   className?: string;
+  /** true: sáng lên khi di chuột. */
+  hover?: boolean;
 }) {
   return (
     <div
       className={cn(
         "rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm",
+        hover &&
+          "transition hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white hover:shadow-md",
         className
       )}
     >
@@ -183,13 +188,15 @@ export function StatCard({
   label,
   value,
   hint,
+  hover = false,
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
+  hover?: boolean;
 }) {
   return (
-    <Card className="p-4">
+    <Card className="p-4" hover={hover}>
       <p className="text-sm text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-bold text-slate-800">{value}</p>
       {hint && <p className="mt-0.5 text-xs text-slate-400">{hint}</p>}

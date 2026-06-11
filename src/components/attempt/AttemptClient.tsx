@@ -7,7 +7,6 @@ import { useBookmarks } from "@/components/useBookmarks";
 import { Button, Card, Container } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/config";
-import { submitAttemptAction } from "@/server/actions";
 import type { ExamWithQuestionsDTO } from "@/lib/types";
 
 function fmt(sec: number) {
@@ -27,46 +26,61 @@ export default function AttemptClient({
   const totalSec = exam.durationMin * 60;
 
   const [answers, setAnswers] = useState<Record<string, string | null>>({});
+  const [essays, setEssays] = useState<Record<string, string>>({});
   const bm = useBookmarks(initialBookmarks);
   const [secondsLeft, setSecondsLeft] = useState(totalSec);
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const submittedRef = useRef(false);
 
   const mcQuestions = useMemo(
     () => exam.questions.filter((q) => q.part === "MC"),
     [exam.questions]
   );
-  const answeredCount = mcQuestions.filter((q) => answers[q.id]).length;
+  const essayQuestions = useMemo(
+    () => exam.questions.filter((q) => q.part === "ESSAY"),
+    [exam.questions]
+  );
 
-  const doSubmit = useCallback(
-    async (auto: boolean) => {
-      if (submittedRef.current) return;
-      if (!auto) {
-        const remaining = mcQuestions.length - answeredCount;
-        const msg =
-          remaining > 0
-            ? `Em còn ${remaining} câu trắc nghiệm chưa trả lời. Vẫn nộp bài?`
-            : "Nộp bài và xem kết quả?";
-        if (!window.confirm(msg)) return;
-      }
-      submittedRef.current = true;
-      setSubmitting(true);
-      try {
-        const elapsed = Math.min(totalSec, totalSec - secondsLeft);
-        const { attemptId } = await submitAttemptAction({
+  const mcAnswered = mcQuestions.filter((q) => answers[q.id]).length;
+  const essayAnswered = essayQuestions.filter((q) =>
+    (essays[q.id] ?? "").trim()
+  ).length;
+  const doneCount = mcAnswered + essayAnswered;
+  const remaining = exam.questions.length - doneCount;
+
+  const isAnswered = useCallback(
+    (qid: string, part: string) =>
+      part === "MC" ? !!answers[qid] : !!(essays[qid] ?? "").trim(),
+    [answers, essays]
+  );
+
+  const performSubmit = useCallback(async () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
+    setSubmitting(true);
+    setShowConfirm(false);
+    try {
+      const elapsed = Math.min(totalSec, totalSec - secondsLeft);
+      const res = await fetch("/api/attempts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           examNumber: exam.number,
           answers,
+          essayAnswers: essays,
           durationSec: elapsed,
-        });
-        router.push(ROUTES.result(exam.number, attemptId));
-      } catch {
-        submittedRef.current = false;
-        setSubmitting(false);
-        alert("Có lỗi khi nộp bài, em thử lại nhé.");
-      }
-    },
-    [answers, answeredCount, exam.number, mcQuestions.length, router, secondsLeft, totalSec]
-  );
+        }),
+      });
+      if (!res.ok) throw new Error("submit failed");
+      const { attemptId } = await res.json();
+      router.push(ROUTES.result(exam.number, attemptId));
+    } catch {
+      submittedRef.current = false;
+      setSubmitting(false);
+      alert("Có lỗi khi nộp bài, em thử lại nhé.");
+    }
+  }, [answers, essays, exam.number, router, secondsLeft, totalSec]);
 
   // Đồng hồ đếm ngược + tự nộp khi hết giờ
   useEffect(() => {
@@ -74,17 +88,26 @@ export default function AttemptClient({
       setSecondsLeft((s) => {
         if (s <= 1) {
           clearInterval(id);
-          void doSubmit(true);
+          void performSubmit();
           return 0;
         }
         return s - 1;
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [doSubmit]);
+  }, [performSubmit]);
 
-  const onSelect = (qid: string, key: string) =>
-    setAnswers((a) => ({ ...a, [qid]: key }));
+  // Callbacks ổn định để QuestionView (memo) không re-render mỗi giây
+  const onSelect = useCallback(
+    (qid: string, key: string) =>
+      setAnswers((a) => ({ ...a, [qid]: key })),
+    []
+  );
+  const onEssayChange = useCallback(
+    (qid: string, text: string) =>
+      setEssays((e) => ({ ...e, [qid]: text })),
+    []
+  );
 
   const scrollTo = (order: number) =>
     document
@@ -105,9 +128,11 @@ export default function AttemptClient({
               question={q}
               mode="attempt"
               selectedKey={answers[q.id] ?? null}
-              onSelect={(key) => onSelect(q.id, key)}
+              onSelect={onSelect}
+              essayValue={essays[q.id] ?? ""}
+              onEssayChange={onEssayChange}
               bookmarked={bm.has(q.id)}
-              onToggleBookmark={() => bm.toggle(q.id)}
+              onToggleBookmark={bm.toggle}
             />
           ))}
         </div>
@@ -125,12 +150,19 @@ export default function AttemptClient({
               >
                 {fmt(secondsLeft)}
               </p>
-              <div className="mt-3 text-sm text-slate-500">
-                Đã trả lời{" "}
-                <span className="font-semibold text-indigo-600">
-                  {answeredCount}/{mcQuestions.length}
-                </span>{" "}
-                câu trắc nghiệm
+              <div className="mt-3 space-y-0.5 text-sm text-slate-500">
+                <p>
+                  Trắc nghiệm:{" "}
+                  <span className="font-semibold text-indigo-600">
+                    {mcAnswered}/{mcQuestions.length}
+                  </span>
+                </p>
+                <p>
+                  Tự luận:{" "}
+                  <span className="font-semibold text-indigo-600">
+                    {essayAnswered}/{essayQuestions.length}
+                  </span>
+                </p>
               </div>
             </Card>
 
@@ -140,7 +172,7 @@ export default function AttemptClient({
               </p>
               <div className="grid grid-cols-5 gap-2">
                 {exam.questions.map((q) => {
-                  const answered = q.part === "MC" && !!answers[q.id];
+                  const answered = isAnswered(q.id, q.part);
                   const marked = bm.has(q.id);
                   return (
                     <button
@@ -148,19 +180,18 @@ export default function AttemptClient({
                       type="button"
                       onClick={() => scrollTo(q.order)}
                       className={cn(
-                        "relative grid h-9 place-items-center rounded-lg border text-sm font-medium transition",
+                        "relative grid h-9 place-items-center overflow-hidden rounded-lg border text-sm font-medium transition",
                         answered
                           ? "border-indigo-500 bg-indigo-500 text-white"
-                          : q.part === "MC"
-                            ? "border-slate-200 bg-white text-slate-600 hover:border-indigo-300"
-                            : "border-slate-200 bg-slate-50 text-slate-400 hover:border-indigo-300"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300"
                       )}
                     >
                       {q.order}
                       {marked && (
-                        <span className="absolute -right-1 -top-1 text-xs">
-                          🔖
-                        </span>
+                        <span
+                          className="absolute right-0 top-0 border-t-[14px] border-l-[14px] border-t-amber-400 border-l-transparent"
+                          aria-hidden
+                        />
                       )}
                     </button>
                   );
@@ -169,11 +200,14 @@ export default function AttemptClient({
               <div className="mt-3 space-y-1 text-xs text-slate-400">
                 <p>
                   <span className="mr-1 inline-block h-3 w-3 rounded bg-indigo-500 align-middle" />
-                  Đã trả lời ·{" "}
+                  Đã làm ·{" "}
                   <span className="mr-1 ml-1 inline-block h-3 w-3 rounded border border-slate-300 bg-white align-middle" />
                   Chưa làm
                 </p>
-                <p>🔖 Câu đã đánh dấu xem lại</p>
+                <p>
+                  <span className="mr-1 inline-block h-3 w-3 rounded-sm bg-amber-400 align-middle" />
+                  Câu đã đánh dấu (góc vàng)
+                </p>
               </div>
             </Card>
 
@@ -182,13 +216,45 @@ export default function AttemptClient({
               size="lg"
               className="w-full"
               disabled={submitting}
-              onClick={() => doSubmit(false)}
+              onClick={() => setShowConfirm(true)}
             >
               {submitting ? "Đang nộp..." : "Nộp bài"}
             </Button>
           </div>
         </aside>
       </div>
+
+      {/* Modal xác nhận nộp bài */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40 p-4">
+          <Card className="w-full max-w-sm p-6">
+            <h3 className="text-lg font-bold text-slate-800">Nộp bài</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              {remaining > 0
+                ? `Em còn ${remaining}/${exam.questions.length} câu chưa hoàn thành. Em chắc chắn muốn nộp bài chứ?`
+                : "Em đã hoàn thành tất cả các câu. Nộp bài và xem kết quả nhé?"}
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <Button
+                variant="success"
+                size="lg"
+                onClick={performSubmit}
+                disabled={submitting}
+              >
+                Quyết định nộp bài
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={() => setShowConfirm(false)}
+                disabled={submitting}
+              >
+                Tiếp tục làm bài
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </Container>
   );
 }

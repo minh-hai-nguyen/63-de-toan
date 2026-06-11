@@ -36,22 +36,11 @@ export default async function ExamIntroPage({
           <StatCard label="Tự luận" value={exam.essayCount} hint="câu" />
         </div>
 
-        <div className="mt-5">
-          <p className="mb-2 text-sm font-medium text-slate-600">
-            Các thể loại trong đề:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {topics.map((t) => (
-              <Badge key={t}>{topicLabel(t)}</Badge>
-            ))}
-          </div>
-        </div>
-
         <div className="mt-6 rounded-xl bg-indigo-50/60 p-4 text-sm text-slate-600">
           <p className="font-medium text-slate-700">Cách làm:</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-5">
             <li>Phần trắc nghiệm sẽ được chấm điểm tự động khi nộp bài.</li>
-            <li>Phần tự luận em làm ra giấy, sau đó đối chiếu lời giải chi tiết.</li>
+            <li>Phần tự luận em nhập bài làm để đối chiếu lời giải chi tiết.</li>
             <li>Có thể đánh dấu 🔖 câu khó để xem lại sau.</li>
           </ul>
         </div>
@@ -60,6 +49,17 @@ export default async function ExamIntroPage({
           <LinkButton href={ROUTES.attempt(exam.number)} size="lg">
             Bắt đầu làm bài →
           </LinkButton>
+        </div>
+
+        <div className="mt-8 border-t border-slate-100 pt-5">
+          <p className="mb-2 text-sm font-medium text-slate-600">
+            Các thể loại trong đề:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {topics.map((t) => (
+              <Badge key={t}>{topicLabel(t)}</Badge>
+            ))}
+          </div>
         </div>
       </Card>
     </Container>

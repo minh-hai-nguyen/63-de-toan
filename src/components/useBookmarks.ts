@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { toggleBookmarkAction } from "@/server/actions";
 
 /** Quản lý trạng thái bookmark phía client (cập nhật lạc quan, tự revert khi lỗi). */
 export function useBookmarks(initial: string[]) {
@@ -20,11 +19,16 @@ export function useBookmarks(initial: string[]) {
 
   const toggle = useCallback(
     async (qid: string) => {
-      flip(qid);
+      flip(qid); // cập nhật ngay cho mượt
       try {
-        await toggleBookmarkAction(qid);
+        const res = await fetch("/api/bookmarks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ questionId: qid }),
+        });
+        if (!res.ok) throw new Error("failed");
       } catch {
-        flip(qid); // revert
+        flip(qid); // revert nếu lỗi
       }
     },
     [flip]

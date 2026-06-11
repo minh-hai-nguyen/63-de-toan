@@ -11,6 +11,7 @@ export default function ReviewList({
   initialBookmarks,
   canBookmark = true,
   subtitleById,
+  essayById,
 }: {
   questions: QuestionDTO[];
   selected?: Record<string, string | null>;
@@ -18,6 +19,8 @@ export default function ReviewList({
   canBookmark?: boolean;
   /** Nhãn nhỏ hiển thị phía trên mỗi câu (vd tên đề). */
   subtitleById?: Record<string, string>;
+  /** Bài làm tự luận đã nộp (theo questionId). Có → hiện cột "Bài làm của em". */
+  essayById?: Record<string, string | null>;
 }) {
   const bm = useBookmarks(initialBookmarks);
   return (
@@ -33,8 +36,9 @@ export default function ReviewList({
             question={q}
             mode="review"
             selectedKey={selected[q.id] ?? null}
+            studentEssay={essayById ? (essayById[q.id] ?? null) : undefined}
             bookmarked={canBookmark ? bm.has(q.id) : undefined}
-            onToggleBookmark={canBookmark ? () => bm.toggle(q.id) : undefined}
+            onToggleBookmark={canBookmark ? bm.toggle : undefined}
           />
         </div>
       ))}

@@ -45,17 +45,17 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Số đề đã làm" value={summary.count} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <StatCard label="Số đề đã làm" value={summary.count} hover />
         <StatCard
           label="Tỉ lệ đúng trung bình"
           value={`${Math.round(summary.avgPct * 100)}%`}
+          hover
         />
-        <StatCard label="Câu đã đánh dấu" value={bookmarkIds.length} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card className="p-5">
+        <Card className="p-5" hover>
           <h2 className="mb-1 font-semibold text-slate-800">
             Kết quả theo thể loại
           </h2>
@@ -73,26 +73,26 @@ export default async function DashboardPage() {
           )}
         </Card>
 
-        <Card className="p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-800">Ôn lại nhanh</h2>
-            <LinkButton href={ROUTES.review} size="sm" variant="ghost">
-              Xem tất cả →
+        <Card className="flex flex-col p-5" hover>
+          <h2 className="font-semibold text-slate-800">Câu đã đánh dấu 🔖</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Những câu em lưu lại để xem khi cần.
+          </p>
+          <p className="mt-4 text-4xl font-extrabold text-indigo-600">
+            {bookmarkIds.length}
+            <span className="ml-1 text-base font-medium text-slate-400">câu</span>
+          </p>
+          <div className="mt-auto pt-4">
+            <LinkButton href={ROUTES.review} className="w-full">
+              Xem chi tiết →
             </LinkButton>
           </div>
-          <p className="text-sm text-slate-500">
-            Em có{" "}
-            <span className="font-semibold text-indigo-600">
-              {bookmarkIds.length}
-            </span>{" "}
-            câu đã đánh dấu để xem lại. Mở trang “Xem lại” để ôn cùng lời giải.
-          </p>
         </Card>
       </div>
 
       <div className="mt-6">
         <h2 className="mb-3 text-lg font-semibold text-slate-800">
-          Lịch sử làm bài
+          Thống kê các đề đã làm
         </h2>
         <AttemptsTable attempts={attempts} />
       </div>

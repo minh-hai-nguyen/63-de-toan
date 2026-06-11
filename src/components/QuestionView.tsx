@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import MathContent from "@/components/MathContent";
 import { cn } from "@/lib/cn";
 import { difficultyLabel, topicLabel, DIFFICULTY_BADGE } from "@/lib/taxonomy";
@@ -9,23 +9,72 @@ import type { QuestionDTO } from "@/lib/types";
 
 type Mode = "attempt" | "review";
 
-export default function QuestionView({
+type Props = {
+  question: QuestionDTO;
+  mode: Mode;
+  selectedKey?: string | null;
+  onSelect?: (questionId: string, key: string) => void;
+  essayValue?: string; // attempt: nội dung đang nhập
+  onEssayChange?: (questionId: string, text: string) => void;
+  studentEssay?: string | null; // review: bài làm đã nộp
+  bookmarked?: boolean;
+  onToggleBookmark?: (questionId: string) => void;
+};
+
+/** Khối hướng dẫn + lời giải (chỉ ở chế độ xem lại). */
+function SolutionToggles({ question }: { question: QuestionDTO }) {
+  const [showHint, setShowHint] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
+  if (!question.hint && !question.solution) return null;
+  return (
+    <div className="flex flex-col gap-3">
+      {question.hint && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowHint((s) => !s)}
+            className="rounded-xl bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100"
+          >
+            {showHint ? "Ẩn hướng dẫn" : "💡 Hướng dẫn giải"}
+          </button>
+          {showHint && (
+            <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/50 p-4">
+              <MathContent html={question.hint} solution />
+            </div>
+          )}
+        </div>
+      )}
+      {question.solution && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowSolution((s) => !s)}
+            className="rounded-xl bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100"
+          >
+            {showSolution ? "Ẩn lời giải" : "📖 Lời giải chi tiết"}
+          </button>
+          {showSolution && (
+            <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
+              <MathContent html={question.solution} solution />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuestionView({
   question,
   mode,
   selectedKey,
   onSelect,
+  essayValue,
+  onEssayChange,
+  studentEssay,
   bookmarked,
   onToggleBookmark,
-}: {
-  question: QuestionDTO;
-  mode: Mode;
-  selectedKey?: string | null;
-  onSelect?: (key: string) => void;
-  bookmarked?: boolean;
-  onToggleBookmark?: () => void;
-}) {
-  const [showHint, setShowHint] = useState(false);
-  const [showSolution, setShowSolution] = useState(false);
+}: Props) {
   const isMC = question.part === "MC";
 
   return (
@@ -45,7 +94,7 @@ export default function QuestionView({
         {onToggleBookmark && (
           <button
             type="button"
-            onClick={onToggleBookmark}
+            onClick={() => onToggleBookmark(question.id)}
             title="Đánh dấu để xem lại"
             className={cn(
               "ml-auto rounded-lg px-2.5 py-1 text-sm font-medium transition",
@@ -61,6 +110,7 @@ export default function QuestionView({
 
       <MathContent html={question.stem} />
 
+      {/* ── Trắc nghiệm ── */}
       {isMC && (
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {question.choices.map((c) => {
@@ -82,7 +132,7 @@ export default function QuestionView({
                 key={c.key}
                 type="button"
                 disabled={mode === "review"}
-                onClick={() => onSelect?.(c.key)}
+                onClick={() => onSelect?.(question.id, c.key)}
                 className={cn(
                   "flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition",
                   tone,
@@ -111,53 +161,61 @@ export default function QuestionView({
               </button>
             );
           })}
+          {mode === "review" && <div className="sm:col-span-2"><SolutionToggles question={question} /></div>}
         </div>
       )}
 
+      {/* ── Tự luận: đang làm bài ── */}
       {!isMC && mode === "attempt" && (
-        <p className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-          ✍️ Em trình bày lời giải ra giấy. Sau khi nộp bài có thể xem hướng dẫn
-          và lời giải chi tiết để đối chiếu.
-        </p>
-      )}
-
-      {/* Hướng dẫn + lời giải: chỉ hiện sau khi nộp bài (chế độ xem lại) */}
-      {mode === "review" && (question.hint || question.solution) && (
-        <div className="mt-4 flex flex-col gap-3">
-          {question.hint && (
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowHint((s) => !s)}
-                className="rounded-xl bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100"
-              >
-                {showHint ? "Ẩn hướng dẫn" : "💡 Hướng dẫn giải"}
-              </button>
-              {showHint && (
-                <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/50 p-4">
-                  <MathContent html={question.hint} solution />
-                </div>
-              )}
-            </div>
-          )}
-          {question.solution && (
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowSolution((s) => !s)}
-                className="rounded-xl bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100"
-              >
-                {showSolution ? "Ẩn lời giải" : "📖 Lời giải chi tiết"}
-              </button>
-              {showSolution && (
-                <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
-                  <MathContent html={question.solution} solution />
-                </div>
-              )}
-            </div>
-          )}
+        <div className="mt-4">
+          <label className="mb-1 block text-sm font-medium text-slate-600">
+            Bài làm của em (có thể trình bày ra giấy rồi nhập tóm tắt vào đây):
+          </label>
+          <textarea
+            value={essayValue ?? ""}
+            onChange={(e) => onEssayChange?.(question.id, e.target.value)}
+            rows={5}
+            placeholder="Nhập lời giải của em..."
+            className="w-full rounded-xl border border-slate-200 bg-white p-3 text-slate-800 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          />
         </div>
       )}
+
+      {/* ── Tự luận: xem lại ── */}
+      {!isMC &&
+        mode === "review" &&
+        (studentEssay !== undefined ? (
+          // Có bối cảnh bài làm: hiển thị song song bài làm | lời giải
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+              <p className="mb-2 text-sm font-semibold text-slate-600">
+                📝 Bài làm của em
+              </p>
+              {studentEssay ? (
+                <p className="whitespace-pre-line text-slate-700">
+                  {studentEssay}
+                </p>
+              ) : (
+                <p className="text-sm italic text-slate-400">
+                  (Em chưa nhập bài làm cho câu này)
+                </p>
+              )}
+            </div>
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-4">
+              <p className="mb-2 text-sm font-semibold text-slate-600">
+                ✅ Hướng dẫn & lời giải
+              </p>
+              <SolutionToggles question={question} />
+            </div>
+          </div>
+        ) : (
+          // Không có bối cảnh bài làm (vd trang Xem lại): chỉ hiện lời giải
+          <div className="mt-4">
+            <SolutionToggles question={question} />
+          </div>
+        ))}
     </section>
   );
 }
+
+export default memo(QuestionView);

@@ -36,7 +36,11 @@ export default async function ResultPage({
   if (!exam) notFound();
 
   const selected: Record<string, string | null> = {};
-  for (const a of attempt.answers) selected[a.questionId] = a.selectedKey;
+  const essayById: Record<string, string | null> = {};
+  for (const a of attempt.answers) {
+    selected[a.questionId] = a.selectedKey;
+    essayById[a.questionId] = a.essayText;
+  }
 
   const topicById = new Map(exam.questions.map((q) => [q.id, q.topic]));
   const topicStats = aggregateTopicStats(
@@ -89,6 +93,7 @@ export default async function ResultPage({
           <ReviewList
             questions={exam.questions}
             selected={selected}
+            essayById={essayById}
             initialBookmarks={initialBookmarks}
             canBookmark={isOwner}
           />

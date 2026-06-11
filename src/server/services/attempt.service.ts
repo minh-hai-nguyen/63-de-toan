@@ -10,9 +10,10 @@ export async function submitAttempt(params: {
   userId: string;
   examNumber: number;
   answers: Record<string, string | null>;
+  essayAnswers?: Record<string, string>;
   durationSec: number;
 }) {
-  const { userId, examNumber, answers, durationSec } = params;
+  const { userId, examNumber, answers, essayAnswers = {}, durationSec } = params;
 
   const exam = await prisma.exam.findUnique({
     where: { number: examNumber },
@@ -33,6 +34,21 @@ export async function submitAttempt(params: {
     answers
   );
 
+  // Bản ghi câu trả lời: trắc nghiệm (đã chấm) + tự luận (lưu bài làm để đối chiếu)
+  const answerRows = [
+    ...details.map((d) => ({
+      questionId: d.questionId,
+      selectedKey: d.selectedKey,
+      isCorrect: d.isCorrect,
+    })),
+    ...exam.questions
+      .filter((q) => q.part === "ESSAY" && (essayAnswers[q.id] ?? "").trim())
+      .map((q) => ({
+        questionId: q.id,
+        essayText: essayAnswers[q.id].trim(),
+      })),
+  ];
+
   const attempt = await prisma.attempt.create({
     data: {
       userId,
@@ -42,13 +58,7 @@ export async function submitAttempt(params: {
       mcScore,
       mcMax,
       status: "SUBMITTED",
-      answers: {
-        create: details.map((d) => ({
-          questionId: d.questionId,
-          selectedKey: d.selectedKey,
-          isCorrect: d.isCorrect,
-        })),
-      },
+      answers: { create: answerRows },
     },
   });
 
