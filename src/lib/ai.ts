@@ -1,13 +1,14 @@
 import "server-only";
+import type { AiMessage } from "./ai-utils";
 
 // Tích hợp AI miễn phí qua Google Gemini (REST, gọi thẳng bằng fetch — không thêm thư viện).
 // Lấy key miễn phí tại https://aistudio.google.com/apikey rồi đặt GEMINI_API_KEY trong .env.
 // Đổi model qua GEMINI_MODEL (mặc định gemini-2.5-flash — có gói free).
 
+export type { AiMessage };
+
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-
-export type AiMessage = { role: "user" | "model"; text: string };
 
 /** Đã cấu hình key AI chưa? */
 export function aiConfigured(): boolean {

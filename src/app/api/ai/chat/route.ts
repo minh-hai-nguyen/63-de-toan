@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { aiConfigured, askGemini, TUTOR_SYSTEM, type AiMessage } from "@/lib/ai";
+import { aiConfigured, askGemini, TUTOR_SYSTEM } from "@/lib/ai";
+import { normalizeChatMessages } from "@/lib/ai-utils";
 
 /** Trợ lý AI: trao đổi kiến thức Toán với học sinh. */
 export async function POST(req: Request) {
@@ -14,14 +15,7 @@ export async function POST(req: Request) {
     );
 
   const body = await req.json().catch(() => null);
-  const raw = Array.isArray(body?.messages) ? body.messages : [];
-  const messages: AiMessage[] = raw
-    .slice(-12) // giữ 12 lượt gần nhất cho gọn
-    .map((m: { role?: string; text?: string; content?: string }) => ({
-      role: m.role === "model" ? "model" : "user",
-      text: String(m.text ?? m.content ?? "").slice(0, 4000),
-    }))
-    .filter((m: AiMessage) => m.text);
+  const messages = normalizeChatMessages(body?.messages);
 
   if (messages.length === 0)
     return NextResponse.json({ error: "Thiếu nội dung." }, { status: 400 });

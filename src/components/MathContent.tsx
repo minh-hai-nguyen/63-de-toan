@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { MathJax } from "better-react-mathjax";
 import { cn } from "@/lib/cn";
+import { escapeHtml } from "@/lib/ai-utils";
 
 /**
  * Hiển thị nội dung có HTML + công thức toán ($...$, $$...$$).
@@ -16,17 +17,21 @@ function MathContent({
   html,
   className,
   solution = false,
+  escape = false,
 }: {
   html: string;
   className?: string;
   /** true: giữ xuống dòng (dùng cho lời giải đã soạn sẵn). */
   solution?: boolean;
+  /** true: escape HTML trước khi render (dùng cho nội dung do AI sinh ra). */
+  escape?: boolean;
 }) {
+  const content = escape ? escapeHtml(html) : html;
   return (
     <MathJax>
       <div
         className={cn("qcontent", solution && "qsolution", className)}
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: content }}
       />
     </MathJax>
   );

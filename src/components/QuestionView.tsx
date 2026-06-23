@@ -65,7 +65,7 @@ function AiFeedback({
       </button>
       {state === "done" && (
         <div className="mt-2 rounded-xl border border-violet-100 bg-violet-50/50 p-3">
-          <MathContent html={text} solution />
+          <MathContent html={text} escape solution />
           <p className="mt-2 text-xs text-slate-400">
             * Nhận xét của AI chỉ mang tính tham khảo.
           </p>

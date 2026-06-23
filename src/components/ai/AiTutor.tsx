@@ -88,7 +88,7 @@ export default function AiTutor() {
                 )}
               >
                 {m.role === "model" ? (
-                  <MathContent html={m.text} />
+                  <MathContent html={m.text} escape solution />
                 ) : (
                   <span className="whitespace-pre-line">{m.text}</span>
                 )}

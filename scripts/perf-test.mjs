@@ -63,20 +63,37 @@ try {
   log(`   ${ok(max < PASS.answerClickMs)} (ngưỡng < ${PASS.answerClickMs} ms)`);
   results.push(max < PASS.answerClickMs);
 
-  // 4) Đo đánh dấu + kiểm tra KHÔNG tự mất sau 6 giây
-  const bmBtn = page.locator(`#cau-9 button`).filter({ hasText: "Đánh dấu" });
+  // 4) Đo đánh dấu (độc lập trạng thái ban đầu) + kiểm tra KHÔNG tự đổi sau 6 giây
+  const bmBtn = page
+    .locator(`#cau-9 button`)
+    .filter({ hasText: "Đánh dấu" })
+    .first();
+  const before = (await bmBtn.textContent()) || "";
+  const wasMarked = before.includes("Đã đánh dấu");
   const t1 = Date.now();
   await bmBtn.click();
-  await page.locator(`#cau-9 button`).filter({ hasText: "Đã đánh dấu" }).waitFor({ timeout: 5000 });
+  // chờ nhãn lật sang trạng thái ngược lại
+  await page.waitForFunction(
+    (was) => {
+      const b = [...document.querySelectorAll("#cau-9 button")].find((x) =>
+        x.textContent.includes("🔖")
+      );
+      return !!b && b.textContent.includes("Đã đánh dấu") === !was;
+    },
+    wasMarked,
+    { timeout: 5000 }
+  );
   const bmMs = Date.now() - t1;
   await page.waitForTimeout(6000);
-  const stillMarked = await page
-    .locator(`#cau-9 button`)
-    .filter({ hasText: "Đã đánh dấu" })
-    .count();
-  log(`\n🔖 Đánh dấu: ${bmMs} ms · còn giữ trạng thái sau 6s: ${stillMarked > 0 ? "CÓ" : "KHÔNG"}`);
-  log(`   ${ok(bmMs < PASS.bookmarkMs && stillMarked > 0)} (ngưỡng < ${PASS.bookmarkMs} ms & không tự mất)`);
-  results.push(bmMs < PASS.bookmarkMs && stillMarked > 0);
+  const stable = await page.evaluate((was) => {
+    const b = [...document.querySelectorAll("#cau-9 button")].find((x) =>
+      x.textContent.includes("🔖")
+    );
+    return !!b && b.textContent.includes("Đã đánh dấu") === !was;
+  }, wasMarked);
+  log(`\n🔖 Đánh dấu: ${bmMs} ms · giữ nguyên trạng thái mới sau 6s: ${stable ? "CÓ" : "KHÔNG"}`);
+  log(`   ${ok(bmMs < PASS.bookmarkMs && stable)} (ngưỡng < ${PASS.bookmarkMs} ms & không tự đổi)`);
+  results.push(bmMs < PASS.bookmarkMs && stable);
 
   // 5) Nhập tự luận nhanh (đo phản hồi gõ phím)
   const ta = page.locator(`#cau-9 textarea`);
