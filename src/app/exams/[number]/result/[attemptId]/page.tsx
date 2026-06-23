@@ -4,6 +4,7 @@ import { getAttemptDetail } from "@/server/services/attempt.service";
 import { getExamByNumber } from "@/server/services/exam.service";
 import { getBookmarkedQuestionIds } from "@/server/services/bookmark.service";
 import { aggregateTopicStats, formatDuration, formatScore } from "@/lib/scoring";
+import { aiConfigured } from "@/lib/ai";
 import { ROLES, ROUTES } from "@/lib/config";
 import {
   Card,
@@ -96,6 +97,7 @@ export default async function ResultPage({
             essayById={essayById}
             initialBookmarks={initialBookmarks}
             canBookmark={isOwner}
+            aiEnabled={isOwner && aiConfigured()}
           />
         </div>
 

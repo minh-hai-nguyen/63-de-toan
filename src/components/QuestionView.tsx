@@ -17,9 +17,66 @@ type Props = {
   essayValue?: string; // attempt: nội dung đang nhập
   onEssayChange?: (questionId: string, text: string) => void;
   studentEssay?: string | null; // review: bài làm đã nộp
+  aiEnabled?: boolean; // review: cho phép "Nhờ AI nhận xét"
   bookmarked?: boolean;
   onToggleBookmark?: (questionId: string) => void;
 };
+
+/** Nút "Nhờ AI nhận xét" cho bài tự luận (chế độ xem lại). */
+function AiFeedback({
+  questionId,
+  studentAnswer,
+}: {
+  questionId: string;
+  studentAnswer: string;
+}) {
+  const [state, setState] = useState<"idle" | "loading" | "done" | "error">(
+    "idle"
+  );
+  const [text, setText] = useState("");
+
+  async function run() {
+    setState("loading");
+    try {
+      const res = await fetch("/api/ai/essay-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionId, studentAnswer }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Lỗi");
+      setText(data.feedback);
+      setState("done");
+    } catch (e) {
+      setText((e as Error).message || "AI tạm thời bận, thử lại sau.");
+      setState("error");
+    }
+  }
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={run}
+        disabled={state === "loading"}
+        className="rounded-xl bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+      >
+        {state === "loading" ? "AI đang xem…" : "🤖 Nhờ AI nhận xét"}
+      </button>
+      {state === "done" && (
+        <div className="mt-2 rounded-xl border border-violet-100 bg-violet-50/50 p-3">
+          <MathContent html={text} solution />
+          <p className="mt-2 text-xs text-slate-400">
+            * Nhận xét của AI chỉ mang tính tham khảo.
+          </p>
+        </div>
+      )}
+      {state === "error" && (
+        <p className="mt-2 text-sm text-rose-600">{text}</p>
+      )}
+    </div>
+  );
+}
 
 /** Khối hướng dẫn + lời giải (chỉ ở chế độ xem lại). */
 function SolutionToggles({ question }: { question: QuestionDTO }) {
@@ -72,6 +129,7 @@ function QuestionView({
   essayValue,
   onEssayChange,
   studentEssay,
+  aiEnabled,
   bookmarked,
   onToggleBookmark,
 }: Props) {
@@ -199,6 +257,12 @@ function QuestionView({
                 <p className="text-sm italic text-slate-400">
                   (Em chưa nhập bài làm cho câu này)
                 </p>
+              )}
+              {aiEnabled && studentEssay && (
+                <AiFeedback
+                  questionId={question.id}
+                  studentAnswer={studentEssay}
+                />
               )}
             </div>
             <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-4">

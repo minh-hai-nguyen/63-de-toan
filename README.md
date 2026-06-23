@@ -31,6 +31,23 @@ npm run dev                   # http://localhost:3000
 **Tài khoản mẫu** (mật khẩu `12345678`): `gv` (giáo viên), `hocsinh` (học sinh).
 Học sinh mới có thể tự đăng ký tại `/register`.
 
+## Tính năng AI (tuỳ chọn, miễn phí)
+
+Dùng **Google Gemini** (gói miễn phí). Nếu không cấu hình key, web vẫn chạy bình thường,
+chỉ ẩn các nút AI.
+
+- 🤖 **Trợ lý Toán AI** — nút "Hỏi AI" nổi góc phải để học sinh trao đổi, hỏi cách làm.
+- ✍️ **AI nhận xét tự luận** — ở trang kết quả, mỗi câu tự luận có nút "Nhờ AI nhận xét":
+  so bài làm với lời giải mẫu, trả nhận xét + điểm gợi ý.
+
+**Bật tính năng:**
+1. Lấy API key miễn phí tại <https://aistudio.google.com/apikey> (đăng nhập Google, không cần thẻ).
+2. Đặt biến môi trường `GEMINI_API_KEY="..."` (local: file `.env`; Render: tab *Environment*).
+3. (Tuỳ chọn) đổi model qua `GEMINI_MODEL` — mặc định `gemini-2.5-flash` (miễn phí).
+
+> Gói miễn phí của Gemini có giới hạn số lượt/phút; đủ cho lớp học nhỏ. Nhận xét của AI
+> chỉ mang tính tham khảo, không thay thế giáo viên chấm.
+
 ## Cấu trúc thư mục
 
 ```

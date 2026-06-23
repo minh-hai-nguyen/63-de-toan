@@ -12,6 +12,7 @@ export default function ReviewList({
   canBookmark = true,
   subtitleById,
   essayById,
+  aiEnabled,
 }: {
   questions: QuestionDTO[];
   selected?: Record<string, string | null>;
@@ -21,6 +22,8 @@ export default function ReviewList({
   subtitleById?: Record<string, string>;
   /** Bài làm tự luận đã nộp (theo questionId). Có → hiện cột "Bài làm của em". */
   essayById?: Record<string, string | null>;
+  /** Cho phép nút "Nhờ AI nhận xét". */
+  aiEnabled?: boolean;
 }) {
   const bm = useBookmarks(initialBookmarks);
   return (
@@ -37,6 +40,7 @@ export default function ReviewList({
             mode="review"
             selectedKey={selected[q.id] ?? null}
             studentEssay={essayById ? (essayById[q.id] ?? null) : undefined}
+            aiEnabled={aiEnabled}
             bookmarked={canBookmark ? bm.has(q.id) : undefined}
             onToggleBookmark={canBookmark ? bm.toggle : undefined}
           />

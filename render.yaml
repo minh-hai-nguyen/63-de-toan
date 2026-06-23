@@ -22,3 +22,7 @@ services:
         generateValue: true
       - key: AUTH_TRUST_HOST
         value: "true"
+      # AI (tuỳ chọn): dán key Gemini miễn phí ở tab Environment trên Render.
+      # Lấy key tại https://aistudio.google.com/apikey . Bỏ trống = tắt AI.
+      - key: GEMINI_API_KEY
+        sync: false
